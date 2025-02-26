@@ -4,11 +4,13 @@ from sqlalchemy import Column, DateTime, Integer, Text, String, ForeignKey, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.sql import func
+
 
 PG_USER = os.getenv("PG_USER", 'postgres')
 PG_PASSWORD = os.getenv("PG_PASSWORD", 'bdlike45')
 PG_DB = os.getenv("PG_DB", 'flask_db')
-PG_HOST = os.getenv("PG_HOST", '127.0.0.1')
+PG_HOST = os.getenv("PG_HOST", 'db')
 PG_PORT = os.getenv("PG_PORT", 5432)
 
 PG_DSN = f"postgresql+asyncpg://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/{PG_DB}"
@@ -37,7 +39,7 @@ class Ad(Base):
     text = Column(Text, nullable=False, index=True)
     creation_time = Column(DateTime, server_default=func.now())
     owner_id = Column(Integer, ForeignKey("users.id"))
-    owner = relationship("User", back_populates="ads")
+    owner = relationship("User", back_populates="ads", lazy="joined")
 
 # Создаем таблицы в базе данных
 async def create_tables():

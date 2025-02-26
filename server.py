@@ -8,12 +8,17 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
 from models import Ad, Session, User
 import schema
+import logging
+
+# Добавим логирование 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Настройки базы данных
 PG_USER = os.getenv("PG_USER", 'postgres')
 PG_PASSWORD = os.getenv("PG_PASSWORD", 'bdlike45')
 PG_DB = os.getenv("PG_DB", 'flask_db')
-PG_HOST = os.getenv("PG_HOST", '127.0.0.1')
+PG_HOST = os.getenv("PG_HOST", 'db')
 PG_PORT = os.getenv("PG_PORT", 5432)
 
 PG_DSN = f"postgresql+asyncpg://{PG_USER}:{PG_PASSWORD}@{PG_HOST}:{PG_PORT}/{PG_DB}"
@@ -52,6 +57,7 @@ class AdView(web.View):
             ad_id = int(self.request.match_info['ad_id'])
             async with Session() as session:
                 ad = await get_ad(session, ad_id)
+                logger.debug(f"Retrieved ad: {ad}")
                 return web.json_response({
                     "id": ad.id,
                     "header": ad.header,
@@ -60,8 +66,10 @@ class AdView(web.View):
                     "owner": ad.owner.email
                 })
         except HTTPNotFound as e:
+            logger.error(f"Ad not found: {e}")
             return web.json_response({"status": "Error", "message": str(e)}, status=404)
         except Exception as e:
+            logger.error(f"Error retrieving ad: {e}")
             return web.json_response({"status": "Error", "message": str(e)}, status=400)
 
     async def patch(self):

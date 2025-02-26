@@ -24,9 +24,36 @@ python server.py
 4. Запустить тестовые запросы:
 python client.py
 
-Задание 2(в доработке):
+Задание 2:
 1. Для докеризации API, создаем Dockerfile и docker-compose.yml.
 2. Собираем и запускаем контейнеры.
 docker-compose up --build
 3. Перезапускаем python server.py
 4. Проверяем работу роута, через Postman.
+
+# Запросы через Postman:
+
+Регистрация пользователя: Метод: POST
+ URL: http://localhost:8080/register
+Тело запроса (JSON):
+{
+  "email": "test@example.com",
+  "password": "pass1234"
+}
+
+Аутентификация пользователя: Метод: POST
+URL: http://localhost:8080/login
+Тело запроса (JSON):
+{
+  "email": "test@example.com",
+  "password": "pass1234"
+}
+
+Создание объявления: Метод: POST
+URL: http://localhost:8080/ad/
+Заголовок: Authorization: Bearer <ваш_токен>
+Тело запроса (JSON):
+{
+  "header": "Car for sale",
+  "text": "Car in good condition"
+}

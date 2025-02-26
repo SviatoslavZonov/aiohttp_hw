@@ -1,87 +1,80 @@
-import requests
+import asyncio
+import aiohttp
 
-# Регистрация пользователя
-register_response = requests.post('http://127.0.0.1:8080/register', json={
-    'email': 'test@example.com',
-    'password': 'pass1234'
-})
+async def main():
+    async with aiohttp.ClientSession() as session:
+        # Регистрация пользователя
+        register_data = {
+            'email': 'test5@example.com',
+            'password': 'pass12345'
+        }
+        async with session.post('http://127.0.0.1:8080/register', json=register_data) as response:
+            print("Регистрация пользователя:")
+            print(response.status)
+            print(await response.json())
 
-print("Регистрация пользователя:")
-print(register_response.status_code)
-print(register_response.json())
+        # Аутентификация пользователя
+        login_data = {
+            'email': 'test@example.com',
+            'password': 'pass1234'
+        }
+        async with session.post('http://127.0.0.1:8080/login', json=login_data) as response:
+            print("\nАутентификация пользователя:")
+            print(response.status)
+            login_response = await response.json()
+            print(login_response)
 
-# Аутентификация пользователя
-login_response = requests.post('http://127.0.0.1:8080/login', json={
-    'email': 'test@example.com',
-    'password': 'pass1234'
-})
+        # Получаем токен для авторизации
+        token = login_response.get('token')
 
-print("\nАутентификация пользователя:")
-print(login_response.status_code)
-print(login_response.json())
+        # Создание объявления
+        create_ad_data = {
+            'header': 'Car for sale',
+            'text': 'Car in good condition'
+        }
+        headers = {'Authorization': f'Bearer {token}'}
+        async with session.post('http://127.0.0.1:8080/ad/', json=create_ad_data, headers=headers) as response:
+            print("\nСоздание объявления:")
+            print(response.status)
+            create_ad_response = await response.json()
+            print(create_ad_response)
 
-# Получаем токен для авторизации
-token = login_response.json().get('token')
+        # Получение ID созданного объявления
+        ad_id = create_ad_response.get('id')
 
-# Создание объявления
-create_ad_response = requests.post('http://127.0.0.1:8080/ad/', json={
-    'header': 'Car for sale',
-    'text': 'Car in good condition'
-}, headers={'Authorization': f'Bearer {token}'})
+        # Получение объявления
+        async with session.get(f'http://127.0.0.1:8080/ad/{ad_id}', headers=headers) as response:
+            print("\nПолучение объявления:")
+            print(response.status)
+            if response.status == 200:
+                print(await response.json())
+            else:
+                print(f"Ошибка при получении объявления: {await response.text()}")
+        
+        # Редактирование объявления
+        update_ad_data = {
+            'header': 'Car has become more expensive',
+            'text': 'Changed oil and belts'
+        }
+        async with session.patch(f'http://127.0.0.1:8080/ad/{ad_id}', json=update_ad_data, headers=headers) as response:
+            print("\nРедактирование объявления:")
+            print(response.status)
+            print(await response.json())
 
-print("\nСоздание объявления:")
-print(create_ad_response.status_code)
-print(create_ad_response.json())
+        # Удаление объявления
+        async with session.delete(f'http://127.0.0.1:8080/ad/{ad_id}', headers=headers) as response:
+            print("\nУдаление объявления:")
+            print(response.status)
+            print(await response.json())
 
-# Получение ID созданного объявления
-ad_id = create_ad_response.json().get('id')
+        # Проверка, что объявление удалено
+        async with session.get(f'http://127.0.0.1:8080/ad/{ad_id}', headers=headers) as response:
+            print("\nПроверка удаления объявления:")
+            print(response.status)
+            if response.status == 200:
+                print(await response.json())
+            else:
+                print("Объявление не найдено")
 
-# Получение объявления
-get_ad_response = requests.get(
-    f'http://127.0.0.1:8080/ad/{ad_id}',
-    headers={'Authorization': f'Bearer {token}'}
-)
-
-print("\nПолучение объявления:")
-print(get_ad_response.status_code)
-if get_ad_response.text:  # Проверяем, не пустой ли ответ
-    print(get_ad_response.json())
-else:
-    print("Пустой ответ от сервера")
-
-# Редактирование объявления
-update_ad_response = requests.patch(
-    f'http://127.0.0.1:8080/ad/{ad_id}',
-    json={
-        'header': 'Car has become more expensive',
-        'text': 'Changed oil and belts'
-    },
-    headers={'Authorization': f'Bearer {token}'}
-)
-
-print("\nРедактирование объявления:")
-print(update_ad_response.status_code)
-print(update_ad_response.json())
-
-# Удаление объявления
-delete_ad_response = requests.delete(
-    f'http://127.0.0.1:8080/ad/{ad_id}',
-    headers={'Authorization': f'Bearer {token}'}
-)
-
-print("\nУдаление объявления:")
-print(delete_ad_response.status_code)
-print(delete_ad_response.json())
-
-# Проверка, что объявление удалено
-check_ad_response = requests.get(
-    f'http://127.0.0.1:8080/ad/{ad_id}',
-    headers={'Authorization': f'Bearer {token}'}
-)
-
-print("\nПроверка удаления объявления:")
-print(check_ad_response.status_code)
-if check_ad_response.text:  # Проверяем, не пустой ли ответ
-    print(check_ad_response.json())
-else:
-    print("Пустой ответ от сервера")
+if __name__ == "__main__":
+    asyncio.run(main())

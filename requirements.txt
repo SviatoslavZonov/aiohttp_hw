@@ -7,10 +7,8 @@ asyncpg==0.30.0
 python-dotenv==1.0.1
 requests==2.26.0
 psycopg2-binary==2.9.10
-psycopg2==2.9.10
 cffi==1.17.1 
 cryptography==44.0.1 
 jwt==1.3.1 
 pycparser==2.22
 uuid==1.30
-aiohttp-basicauth==1.1.0
